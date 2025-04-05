@@ -1,5 +1,4 @@
-
-import { AlertTriangle, Shield, Scales, DollarSign, Clock, Tag } from "lucide-react";
+import { AlertTriangle, Shield, Scale, DollarSign, Clock, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -87,7 +86,7 @@ export const RiskAnalysisTab = () => {
   // Get risk category icon
   const getRiskCategoryIcon = (category: string) => {
     switch(category) {
-      case "Legal": return <Scales className="h-5 w-5" />;
+      case "Legal": return <Scale className="h-5 w-5" />;
       case "Financial": return <DollarSign className="h-5 w-5" />;
       case "Technical": return <Shield className="h-5 w-5" />;
       case "Timeline": return <Clock className="h-5 w-5" />;
@@ -151,8 +150,7 @@ export const RiskAnalysisTab = () => {
                   </div>
                   <Progress 
                     value={category.score} 
-                    className="h-2"
-                    indicatorClassName="bg-current"
+                    className={`h-2 bg-secondary [&>div]:bg-current`}
                     style={{ color: category.color }}
                   />
                 </div>

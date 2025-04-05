@@ -1,4 +1,3 @@
-
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -133,12 +132,11 @@ export const EligibilityTab = () => {
                     </div>
                     <Progress 
                       value={category.score} 
-                      className="h-2" 
-                      indicatorClassName={
-                        category.score >= 90 ? "bg-green-500" :
-                        category.score >= 70 ? "bg-yellow-500" : 
-                        "bg-red-500"
-                      }
+                      className={`h-2 ${
+                        category.score >= 90 ? "[&>div]:bg-green-500" :
+                        category.score >= 70 ? "[&>div]:bg-yellow-500" : 
+                        "[&>div]:bg-red-500"
+                      }`}
                     />
                   </div>
                 ))}

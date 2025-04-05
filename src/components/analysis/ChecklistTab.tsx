@@ -1,4 +1,3 @@
-
 import { Check, Clipboard, AlertCircle, FileText, FileArchive, FileCog } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Checklist item type
 type ChecklistItem = {
   id: string;
   section: string;
@@ -21,7 +19,6 @@ type ChecklistItem = {
 
 export const ChecklistTab = () => {
   const { toast } = useToast();
-  // Mock data for the checklist
   const initialChecklist: ChecklistItem[] = [
     {
       id: "DOC-001",
@@ -172,7 +169,6 @@ export const ChecklistTab = () => {
   const [checklist, setChecklist] = useState<ChecklistItem[]>(initialChecklist);
   const [filter, setFilter] = useState<"all" | "completed" | "pending">("all");
 
-  // Handle checkbox toggle
   const handleToggleItem = (itemId: string) => {
     setChecklist(checklist.map(item => 
       item.id === itemId ? { ...item, completed: !item.completed } : item
@@ -187,7 +183,6 @@ export const ChecklistTab = () => {
     }
   };
 
-  // Filter items based on selected filter
   const filteredItems = checklist.filter(item => {
     if (filter === "all") return true;
     if (filter === "completed") return item.completed;
@@ -195,10 +190,8 @@ export const ChecklistTab = () => {
     return true;
   });
 
-  // Group items by section
   const sections = Array.from(new Set(checklist.map(item => item.section)));
   
-  // Calculate completion statistics
   const totalItems = checklist.length;
   const completedItems = checklist.filter(item => item.completed).length;
   const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
@@ -210,7 +203,6 @@ export const ChecklistTab = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Completion Progress */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="pb-2">
@@ -227,7 +219,7 @@ export const ChecklistTab = () => {
               <span className="text-sm text-gray-500">Required Items</span>
               <span className="text-sm font-medium">{requiredCompletedItems} of {totalRequiredItems} ({requiredCompletionPercentage}%)</span>
             </div>
-            <Progress value={requiredCompletionPercentage} className="h-2" indicatorClassName="bg-rfp-red" />
+            <Progress value={requiredCompletionPercentage} className="h-2 [&>div]:bg-rfp-red" />
           </CardContent>
         </Card>
         
@@ -302,7 +294,6 @@ export const ChecklistTab = () => {
         </Card>
       </div>
       
-      {/* Filter Controls */}
       <div className="flex flex-wrap gap-2">
         <Button 
           variant={filter === "all" ? "default" : "outline"} 
@@ -327,7 +318,6 @@ export const ChecklistTab = () => {
         </Button>
       </div>
       
-      {/* Checklist Items */}
       <div className="space-y-6">
         {sections.map((section) => {
           const sectionItems = filteredItems.filter(item => item.section === section);
