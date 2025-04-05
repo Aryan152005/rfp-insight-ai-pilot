@@ -1,195 +1,211 @@
 
-import { useState } from "react";
-import { Upload, File, Database, ArrowRight } from "lucide-react";
+import { useState, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { FileText, Upload, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { getAppSettings } from "@/lib/faiss";
 
 export const FileUpload = () => {
-  const [rfpFile, setRfpFile] = useState<File | null>(null);
-  const [companyData, setCompanyData] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleRfpFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setRfpFile(e.target.files[0]);
-    }
-  };
-
-  const handleCompanyDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setCompanyData(e.target.files[0]);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
     
-    if (!rfpFile) {
-      toast({
-        title: "Missing RFP File",
-        description: "Please upload an RFP document to analyze.",
-        variant: "destructive",
-      });
-      return;
+    if (selectedFile) {
+      // Only accept PDF, DOCX, and TXT files
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+      
+      if (!allowedTypes.includes(selectedFile.type)) {
+        setError("Please select a PDF, DOCX, or TXT file");
+        setFile(null);
+        return;
+      }
+      
+      setFile(selectedFile);
+      setError(null);
     }
+  };
 
-    // Simulate file upload and processing
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+  const handleUpload = async () => {
+    if (!file) return;
+    
+    setUploading(true);
+    setError(null);
+    
+    try {
+      // Check if OpenAI API key is provided in app settings
+      const settings = await getAppSettings();
+      
+      if (!settings?.openai_key_provided) {
+        toast({
+          title: "OpenAI API Key Required",
+          description: "Please add your OpenAI API key in Settings to process RFPs",
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+      
+      // Get user from auth
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to upload and process RFPs",
+          variant: "destructive",
+        });
+        setUploading(false);
+        return;
+      }
+
+      // Create a basic title from the filename
+      const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+      const titleFromFileName = fileName.replace(/_/g, " ");
+      
+      // Insert RFP entry first to get the ID
+      const { data: rfpData, error: rfpError } = await supabase
+        .from('rfps')
+        .insert({
+          title: titleFromFileName,
+          file_type: file.type,
+          user_id: session.user.id
+        })
+        .select()
+        .single();
+        
+      if (rfpError) {
+        throw new Error(`Error creating RFP record: ${rfpError.message}`);
+      }
+      
+      // Upload the file to a hypothetical endpoint (in a real app, would use a proper upload mechanism)
+      // For now we'll simulate a successful upload and analysis
+      
+      // Simulate processing time with a delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update the RFP record with success info
+      const { error: updateError } = await supabase
+        .from('rfps')
+        .update({
+          content: "RFP content extracted from file...",
+          file_path: `uploads/${rfpData.id}/${file.name}`,
+          faiss_id: rfpData.id
+        })
+        .eq('id', rfpData.id);
+        
+      if (updateError) {
+        throw new Error(`Error updating RFP record: ${updateError.message}`);
+      }
+      
+      // Show success notification
       toast({
-        title: "Analysis Started",
-        description: "Your RFP is being analyzed. You'll be redirected shortly.",
+        title: "RFP Uploaded Successfully",
+        description: "Your RFP has been processed and is ready for analysis",
       });
       
-      // Redirect to analysis page
-      setTimeout(() => navigate("/analysis"), 1500);
-    }, 2000);
+      // Navigate to analysis page
+      navigate("/analysis");
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError(err instanceof Error ? err.message : "An unknown error occurred during upload");
+      
+      toast({
+        title: "Upload Failed",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12">
-      <Card className="border-2 border-dashed border-gray-200 bg-white shadow-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Upload Documents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="upload" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="upload">Upload Files</TabsTrigger>
-              <TabsTrigger value="sample">Use Sample Data</TabsTrigger>
-            </TabsList>
+    <section className="pb-12">
+      <h2 className="text-2xl font-bold mb-6 text-center">Upload RFP Document</h2>
+      
+      <Card className="border-dashed border-2 border-gray-300 bg-gray-50/50">
+        <CardContent className="p-6">
+          <div className="flex flex-col items-center justify-center text-center">
+            <Input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+              onChange={handleSelectFile}
+            />
             
-            <TabsContent value="upload" className="mt-6">
-              <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* RFP Document Upload */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700 mb-1">RFP Document</p>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                      <input
-                        id="rfp-file"
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleRfpFileChange}
-                        className="hidden"
-                      />
-                      <label htmlFor="rfp-file" className="cursor-pointer text-center">
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rfp-blue/10">
-                          <File className="h-6 w-6 text-rfp-blue" />
-                        </div>
-                        <p className="mt-2 text-sm font-medium text-gray-900">
-                          {rfpFile ? rfpFile.name : "Upload RFP Document"}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          PDF, DOC or DOCX (max 20MB)
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Company Data Upload */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700 mb-1">Company Profile (Optional)</p>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
-                      <input
-                        id="company-data"
-                        type="file"
-                        accept=".json,.csv"
-                        onChange={handleCompanyDataChange}
-                        className="hidden"
-                      />
-                      <label htmlFor="company-data" className="cursor-pointer text-center">
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rfp-teal/10">
-                          <Database className="h-6 w-6 text-rfp-teal" />
-                        </div>
-                        <p className="mt-2 text-sm font-medium text-gray-900">
-                          {companyData ? companyData.name : "Upload Company Data"}
-                        </p>
-                        <p className="mt-1 text-xs text-gray-500">
-                          JSON or CSV (max 5MB)
-                        </p>
-                      </label>
-                    </div>
-                  </div>
+            {!file ? (
+              <>
+                <div className="bg-white rounded-full p-3 mb-4 border border-gray-200">
+                  <FileText className="h-8 w-8 text-rfp-blue" />
                 </div>
-
-                <Button 
-                  type="submit"
-                  className="w-full bg-rfp-blue hover:bg-rfp-blue/90 py-6"
-                  disabled={loading || !rfpFile}
-                >
-                  {loading ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      Start Analysis
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="sample" className="space-y-8 mt-6">
-              <div className="border rounded-lg p-6 bg-gray-50">
-                <h3 className="font-medium mb-2">Sample RFP: IT Modernization Project</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  This is a sample government RFP for modernizing legacy systems with integrated requirements and specifications.
+                <h3 className="text-lg font-medium mb-2">Drag & drop file or browse</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Support for PDF, DOCX, and TXT files up to 10MB
                 </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => {
-                    toast({
-                      title: "Sample RFP Selected",
-                      description: "The sample RFP has been selected for analysis."
-                    });
-                  }}
-                >
-                  <File className="mr-2 h-4 w-4" />
-                  Use Sample RFP
+                <Button onClick={triggerFileInput} className="mb-2">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Browse Files
                 </Button>
-              </div>
-              
-              <Button
-                className="w-full bg-rfp-blue hover:bg-rfp-blue/90 py-6"
-                onClick={() => {
-                  setLoading(true);
-                  toast({
-                    title: "Loading Sample Data",
-                    description: "Preparing sample analysis dashboard.",
-                  });
-                  
-                  setTimeout(() => {
-                    setLoading(false);
-                    navigate("/analysis");
-                  }, 1500);
-                }}
-                disabled={loading}
-              >
-                {loading ? (
-                  "Processing..."
-                ) : (
-                  <>
-                    View Sample Analysis
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
+                <p className="text-xs text-gray-400">
+                  Your file will be processed securely
+                </p>
+              </>
+            ) : (
+              <div className="w-full">
+                <div className="bg-white rounded-full p-3 mb-4 mx-auto w-fit border border-gray-200">
+                  <FileText className="h-8 w-8 text-green-500" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">{file.name}</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {(file.size / (1024 * 1024)).toFixed(2)} MB · {file.type}
+                </p>
+                
+                {error && (
+                  <div className="bg-red-50 text-red-800 p-3 rounded-md mb-4 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <p className="text-sm">{error}</p>
+                  </div>
                 )}
-              </Button>
-            </TabsContent>
-          </Tabs>
+                
+                <div className="flex justify-center gap-2 mt-4">
+                  <Button variant="outline" onClick={triggerFileInput} disabled={uploading}>
+                    Change File
+                  </Button>
+                  <Button onClick={handleUpload} disabled={uploading}>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Analyze RFP
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
-        <CardFooter className="flex justify-center text-sm text-gray-500 bg-gray-50 border-t">
-          <p>Supported formats: PDF, DOC, DOCX, JSON, CSV</p>
-        </CardFooter>
       </Card>
-    </div>
+    </section>
   );
 };
 

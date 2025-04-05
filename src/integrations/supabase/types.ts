@@ -9,7 +9,200 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_results: {
+        Row: {
+          checklist: Json | null
+          company_profile_id: string | null
+          eligibility_score: number | null
+          id: string
+          rfp_id: string
+          risk_flags: Json | null
+          timestamp: string | null
+          verdict: string | null
+        }
+        Insert: {
+          checklist?: Json | null
+          company_profile_id?: string | null
+          eligibility_score?: number | null
+          id?: string
+          rfp_id: string
+          risk_flags?: Json | null
+          timestamp?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          checklist?: Json | null
+          company_profile_id?: string | null
+          eligibility_score?: number | null
+          id?: string
+          rfp_id?: string
+          risk_flags?: Json | null
+          timestamp?: string | null
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_results_company_profile_id_fkey"
+            columns: ["company_profile_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_results_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          openai_key_provided: boolean | null
+          updated_at: string | null
+          use_faiss: boolean | null
+          use_supabase: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          openai_key_provided?: boolean | null
+          updated_at?: string | null
+          use_faiss?: boolean | null
+          use_supabase?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          openai_key_provided?: boolean | null
+          updated_at?: string | null
+          use_faiss?: boolean | null
+          use_supabase?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      company_profiles: {
+        Row: {
+          capabilities: Json | null
+          certifications: Json | null
+          compliance_status: Json | null
+          created_at: string | null
+          id: string
+          locations: Json | null
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          capabilities?: Json | null
+          certifications?: Json | null
+          compliance_status?: Json | null
+          created_at?: string | null
+          id?: string
+          locations?: Json | null
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          capabilities?: Json | null
+          certifications?: Json | null
+          compliance_status?: Json | null
+          created_at?: string | null
+          id?: string
+          locations?: Json | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      qa_logs: {
+        Row: {
+          document_source: string | null
+          id: string
+          query: string
+          response: string
+          rfp_id: string
+          sources: Json | null
+          timestamp: string | null
+          vector_used: boolean | null
+        }
+        Insert: {
+          document_source?: string | null
+          id?: string
+          query: string
+          response: string
+          rfp_id: string
+          sources?: Json | null
+          timestamp?: string | null
+          vector_used?: boolean | null
+        }
+        Update: {
+          document_source?: string | null
+          id?: string
+          query?: string
+          response?: string
+          rfp_id?: string
+          sources?: Json | null
+          timestamp?: string | null
+          vector_used?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_logs_rfp_id_fkey"
+            columns: ["rfp_id"]
+            isOneToOne: false
+            referencedRelation: "rfps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfps: {
+        Row: {
+          agency: string | null
+          content: string | null
+          created_at: string | null
+          faiss_id: string | null
+          file_path: string | null
+          file_type: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agency?: string | null
+          content?: string | null
+          created_at?: string | null
+          faiss_id?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agency?: string | null
+          content?: string | null
+          created_at?: string | null
+          faiss_id?: string | null
+          file_path?: string | null
+          file_type?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
