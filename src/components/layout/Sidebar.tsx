@@ -52,10 +52,13 @@ export const Sidebar = () => {
     setCollapsed(!collapsed);
   };
 
+  // Add console log for debugging
+  console.log("Sidebar rendering, current path:", location.pathname);
+
   return (
     <div
       className={cn(
-        "bg-sidebar h-screen fixed top-16 left-0 z-20 border-r border-gray-200 transition-all duration-300",
+        "bg-sidebar fixed top-16 left-0 z-20 h-[calc(100vh-4rem)] border-r border-gray-200 transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >

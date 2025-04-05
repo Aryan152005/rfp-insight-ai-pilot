@@ -9,6 +9,9 @@ export const TabNavigation = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
+  // Add console log for debugging
+  console.log("TabNavigation rendering, current path:", location.pathname);
+
   useEffect(() => {
     // Extract the tab from the URL path
     const path = location.pathname.split("/").pop();
@@ -18,9 +21,12 @@ export const TabNavigation = () => {
     } else if (path) {
       setActiveTab(path);
     }
+    
+    console.log("Active tab set to:", activeTab);
   }, [location.pathname]);
 
   const handleTabChange = (value: string) => {
+    console.log("Tab changed to:", value);
     setActiveTab(value);
     
     if (value === "overview") {

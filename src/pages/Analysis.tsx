@@ -43,18 +43,20 @@ const Analysis = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <Sidebar />
-      
-      <div className="ml-0 md:ml-64 pt-16">
-        <div className="container py-8 px-4 md:px-8">
-          <div className="mb-6">
-            <TabNavigation />
-          </div>
-          
-          <div className="mt-6">
-            {renderTabContent()}
+      <div className="flex">
+        <Sidebar />
+        
+        <div className="flex-1 ml-0 md:ml-64 pt-16 pb-8">
+          <div className="container py-8 px-4 md:px-8">
+            <div className="mb-6">
+              <TabNavigation />
+            </div>
+            
+            <div className="mt-6">
+              {renderTabContent()}
+            </div>
           </div>
         </div>
       </div>

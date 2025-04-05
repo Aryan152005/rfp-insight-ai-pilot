@@ -24,9 +24,11 @@ export const OverviewTab = () => {
       { name: "Terms & Conditions", pages: "33-40" }
     ]
   };
+  
+  console.log("Rendering OverviewTab");
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       {/* RFP Header Information */}
       <div className="bg-white rounded-lg border border-gray-100 p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-gray-900 mb-3">{rfpData.title}</h1>
@@ -91,7 +93,7 @@ export const OverviewTab = () => {
           </CardContent>
         </Card>
         
-        <Card className="border-t-4 border-t-rfp-yellow">
+        <Card className="border-t-4 border-t-rfp-red">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Risk Assessment</CardTitle>
           </CardHeader>
